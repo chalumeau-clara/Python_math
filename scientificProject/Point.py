@@ -3,10 +3,12 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import numpy as np
-#plt.style.use('ggplot')
-global coords
-coords = [[1,1],[2,3],[4,-1],[6, 5], [7,0]]
 
+# plt.style.use('ggplot')
+global coords
+#coords = [[1, 1], [2, 3], [4, -1], [6, 5], [7, 0]]
+#coords = [[0,4], [1,3], [2,4], [3,13],[4,36], [5, 79], [6,148],[7,249]]
+coords = []
 X_min = 0
 X_max = 40
 Y_min = 0
@@ -66,6 +68,7 @@ class Vandermonde:
     """
     Class for Vandermonde interpolation
     """
+
     def __init__(self, root, graph, ax):
         self.root = root
         self.graph = graph
@@ -130,7 +133,7 @@ class Vandermonde:
             y = np.array([np.sum(np.array([self.coef[i] * (j ** i) for i in range(len(self.coef))])) for j in x])
 
             # Print Poly
-            self.ax.plot(x, y, linewidth=2.0, c="r")
+            self.ax.plot(x, y, linewidth=2.0, c="blue")
             self.graph.draw()
 
         else:
@@ -142,6 +145,7 @@ class Lagrange:
     """
     Class for lagrange interpolation
     """
+
     def __init__(self, root, graph, ax):
         self.root = root
         self.graph = graph
@@ -189,13 +193,14 @@ class Lagrange:
 
             # Print Poly
             x = np.linspace(X_min, X_max, 100)
-            self.ax.plot(x, np.polyval(self.coef, x), linewidth=2.0, c="g")
+            self.ax.plot(x, np.polyval(self.coef, x), linewidth=2.0, c="green")
             self.graph.draw()
         else:
             self.show = False
 
 
 class Newton:
+
     def __init__(self, root, graph, ax):
         self.root = root
         self.graph = graph
@@ -204,7 +209,9 @@ class Newton:
         self.matrix_of_y = None
         self.coef = 0
         self.show = False
+        self.show_div = False
         self.newton_matrix = None
+        self.newton_matrix_div = []
 
     def matrix_x_and_y(self):
         """
@@ -227,7 +234,8 @@ class Newton:
                 elif j > i:
                     break
                 else:
-                    self.newton_matrix[i][j] = self.newton_matrix[i][j - 1] * (self.matrix_of_x[i] - self.matrix_of_x[j - 1])
+                    self.newton_matrix[i][j] = self.newton_matrix[i][j - 1] * (
+                                self.matrix_of_x[i] - self.matrix_of_x[j - 1])
 
     def calcul_coefficient_matrix(self):
         """
@@ -235,16 +243,29 @@ class Newton:
         :return: matrix of coef
         """
         try:
-            # Inverse the vandermonde matrix
+            # Inverse the Newton matrix
             inverse_newton = np.linalg.inv(self.newton_matrix)
             # Compute the coef
             self.coef = inverse_newton.dot(self.matrix_of_y)
+
         except ValueError as err:
             print("Nombre trop grand", err)
 
-
     def diff_div(self):
-        None
+        print(self.matrix_of_y)
+        for i in range(len(self.matrix_of_y)):
+            self.newton_matrix_div.append(self.matrix_of_y[i])
+
+        for i in range(len(self.matrix_of_x)):
+            for j in range(len(self.matrix_of_x) - 1, i, -1):
+                print("i" , i)
+                print(self.newton_matrix_div[j] - self.newton_matrix_div[j - 1])
+                print(self.matrix_of_x[j] - self.matrix_of_x[j - i - 1])
+                self.newton_matrix_div[j] = (self.newton_matrix_div[j] - self.newton_matrix_div[j - 1]) / (self.matrix_of_x[j] - self.matrix_of_x[j - i - 1])
+                print("after result")
+                print(self.newton_matrix_div[j])
+        print(self.newton_matrix_div)
+
 
     def show_matrix(self):
         if not self.show:
@@ -252,12 +273,14 @@ class Newton:
             sort_coords()
             self.matrix_x_and_y()
             self.build_newton_matrix()
-            print(self.newton_matrix)
             self.calcul_coefficient_matrix()
+            print(self.coef)
 
             # Get poly
             x = np.linspace(X_min, X_max, 100)
-            y = np.array([np.sum(np.array([self.coef[i] * (j ** i) for i in range(len(self.coef))])) for j in x])
+            y = []
+            for i in x:
+                y.append(horner(self.matrix_of_x, self.coef, i))
 
             # Print Poly
             self.ax.plot(x, y, linewidth=2.0, c="purple")
@@ -266,19 +289,35 @@ class Newton:
         else:
             self.show = False
 
-
     def show_matrix_ddn(self):
-        None
+        if not self.show_div:
+            self.show_div = True
+            sort_coords()
+            self.matrix_x_and_y()
+            self.diff_div()
 
-def horner(poly, n, x):
+            # Get poly
+            x = np.linspace(X_min, X_max, 100)
+            y = []
+            for i in x:
+                y.append(horner(self.matrix_of_x, self.newton_matrix_div, i))
+
+            # Print Poly
+            self.ax.plot(x, y, linewidth=2.0, c="magenta")
+            self.graph.draw()
+
+        else:
+            self.show_div = False
+
+
+def horner(x_matrix, coef, x):
     # Initialize result
-    result = poly[0]
+    result = 0
 
     # Evaluate value of polynomial
     # using Horner's method
-    for i in range(1, n):
-        result = result * x + poly[i]
-
+    for i in range(len(x_matrix) - 1, -1, -1):
+        result = result * (x - x_matrix[i]) + coef[i]
     return result
 
 
@@ -346,7 +385,7 @@ def init():
     btn_newton_matrix = Button(root, text="Print graph newton matrix", command=newton.show_matrix, bg="purple",
                                fg="white")
     btn_newton_ddn = Button(root, text="Print graph newton ddn", command=newton.show_matrix_ddn, bg="magenta",
-                               fg="white")
+                            fg="white")
     builder_point = BuilderPoint(graph, fig, ax, btn_vander, btn_lagrange, btn_newton_matrix, btn_newton_ddn)
 
     # Manage button for builder point
