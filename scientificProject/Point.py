@@ -3,11 +3,12 @@ from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import numpy as np
+from scipy import interpolate
 
 # plt.style.use('ggplot')
 global coords
-#coords = [[1, 1], [2, 3], [4, -1], [6, 5], [7, 0]]
-#coords = [[0,4], [1,3], [2,4], [3,13],[4,36], [5, 79], [6,148],[7,249]]
+# coords = [[1, 1], [2, 3], [4, -1], [6, 5], [7, 0]]
+# coords = [[0,4], [1,3], [2,4], [3,13],[4,36], [5, 79], [6,148],[7,249]]
 coords = []
 X_min = 0
 X_max = 40
@@ -20,7 +21,7 @@ class BuilderPoint:
     Class for GUI management
     """
 
-    def __init__(self, graph, fig, ax, btn_vander, btn_lagrange, btn_newton_matrix, btn_newton_ddn):
+    def __init__(self, graph, fig, ax, btn_vander, btn_lagrange, btn_newton_matrix, btn_newton_ddn, btn_spline):
         self.graph = graph
         self.fig = fig
         self.ax = ax
@@ -28,6 +29,7 @@ class BuilderPoint:
         self.btn_lagrange = btn_lagrange
         self.btn_newton_matrix = btn_newton_matrix
         self.btn_newton_ddn = btn_newton_ddn
+        self.btn_spline = btn_spline
         self.cid = None
         self.continuePlotting = False
 
@@ -38,6 +40,7 @@ class BuilderPoint:
         self.btn_lagrange.pack_forget()
         self.btn_newton_matrix.pack_forget()
         self.btn_newton_ddn.pack_forget()
+        self.btn_spline.pack_forget()
 
     def disconnect(self):
         self.fig.canvas.mpl_disconnect(self.cid)
@@ -47,6 +50,7 @@ class BuilderPoint:
             self.btn_lagrange.pack()
             self.btn_newton_matrix.pack()
             self.btn_newton_ddn.pack()
+            self.btn_spline.pack()
 
     def change_state(self):
         if self.continuePlotting:
@@ -235,7 +239,7 @@ class Newton:
                     break
                 else:
                     self.newton_matrix[i][j] = self.newton_matrix[i][j - 1] * (
-                                self.matrix_of_x[i] - self.matrix_of_x[j - 1])
+                            self.matrix_of_x[i] - self.matrix_of_x[j - 1])
 
     def calcul_coefficient_matrix(self):
         """
@@ -258,14 +262,14 @@ class Newton:
 
         for i in range(len(self.matrix_of_x)):
             for j in range(len(self.matrix_of_x) - 1, i, -1):
-                print("i" , i)
+                print("i", i)
                 print(self.newton_matrix_div[j] - self.newton_matrix_div[j - 1])
                 print(self.matrix_of_x[j] - self.matrix_of_x[j - i - 1])
-                self.newton_matrix_div[j] = (self.newton_matrix_div[j] - self.newton_matrix_div[j - 1]) / (self.matrix_of_x[j] - self.matrix_of_x[j - i - 1])
+                self.newton_matrix_div[j] = (self.newton_matrix_div[j] - self.newton_matrix_div[j - 1]) / (
+                        self.matrix_of_x[j] - self.matrix_of_x[j - i - 1])
                 print("after result")
                 print(self.newton_matrix_div[j])
         print(self.newton_matrix_div)
-
 
     def show_matrix(self):
         if not self.show:
@@ -310,6 +314,62 @@ class Newton:
             self.show_div = False
 
 
+class Spline:
+    """
+    Class for Spline interpolation
+    """
+
+    def __init__(self, root, graph, ax):
+        self.root = root
+        self.graph = graph
+        self.ax = ax
+        self.matrix_of_x = None
+        self.matrix_of_y = None
+        self.spline = None
+        self.coef = None
+        self.show = False
+
+    def matrix_x_and_y(self):
+        """
+        Divide the coords into two separate list of coords x and y
+        :return: list of x and list of y
+        """
+
+        self.matrix_of_x, self.matrix_of_y = build_matrix_x_and_y(False)
+
+    def build_spline(self):
+        """
+        Construct the BSpline curve
+        :return: An array of values representing the spline function
+        """
+        # Interpolate Spline parameter : Find the B-spline representation of an N-D curve.
+        # Modify k to change the degree
+        tck, u = interpolate.splprep([self.matrix_of_x, self.matrix_of_y], k=3, s=0)
+
+        # Get more precision
+        u = np.linspace(0, 1, num=100, endpoint=True)
+
+        # Evaluate a B-spline
+        self.coef = interpolate.splev(u, tck)
+
+    def show_matrix(self):
+        """
+        Manage the GUI of the vandermonde interpolation and calculate the coef with the vandermonde methods
+        :return: the interpolation
+        """
+        if not self.show:
+            self.show = True
+            self.matrix_x_and_y()
+            self.build_spline()
+
+            # Print Poly
+            self.ax.plot(self.coef[0], self.coef[1], 'cyan')
+            self.graph.draw()
+
+        else:
+            self.show = False
+
+
 def horner(x_matrix, coef, x):
     # Initialize result
     result = 0
@@ -321,7 +381,7 @@ def horner(x_matrix, coef, x):
     return result
 
 
-def build_matrix_x_and_y():
+def build_matrix_x_and_y(spline=True):
     """
     Divide the coords into two separate list of coords x and y
     :return: list of x and list of y
@@ -336,6 +396,11 @@ def build_matrix_x_and_y():
     list_y = []
     for i in range(len(coords)):
         list_y.append(coords[i][1])
+
+    if not spline:
+        list_x = np.append(list_x, list_x[0])
+        list_y = np.append(list_y, list_y[0])
+        return list_x, list_y
     return np.asarray(list_x), np.asarray(list_y)
 
 
@@ -344,7 +409,7 @@ def sort_coords():
     Sort the coords list with the x coordonnates
     :return: Sorted list
     """
-    sorted(coords, key=lambda coord: coords[0])
+    coords.sort(key=lambda coord: coord[0])
 
 
 def init():
@@ -379,6 +444,7 @@ def init():
     vandermonde = Vandermonde(root, graph, ax)
     lagrange = Lagrange(root, graph, ax)
     newton = Newton(root, graph, ax)
+    spline = Spline(root, graph, ax)
 
     btn_vander = Button(root, text="Watch Vander Matrix", command=vandermonde.show_matrix, bg="blue", fg="white")
     btn_lagrange = Button(root, text="Print graph lagrange", command=lagrange.show_matrix, bg="green", fg="white")
@@ -386,7 +452,10 @@ def init():
                                fg="white")
     btn_newton_ddn = Button(root, text="Print graph newton ddn", command=newton.show_matrix_ddn, bg="magenta",
                             fg="white")
-    builder_point = BuilderPoint(graph, fig, ax, btn_vander, btn_lagrange, btn_newton_matrix, btn_newton_ddn)
+    btn_spline = Button(root, text="Print spline cubique", command=spline.show_matrix, bg="cyan",
+                        fg="white")
+    builder_point = BuilderPoint(graph, fig, ax, btn_vander, btn_lagrange, btn_newton_matrix, btn_newton_ddn,
+                                 btn_spline)
 
     # Manage button for builder point
 
