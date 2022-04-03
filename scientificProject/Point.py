@@ -1,3 +1,4 @@
+import math
 from tkinter import *
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
@@ -7,6 +8,7 @@ from scipy import interpolate
 
 # plt.style.use('ggplot')
 global coords
+global Bspline
 # coords = [[1, 1], [2, 3], [4, -1], [6, 5], [7, 0]]
 # coords = [[0,4], [1,3], [2,4], [3,13],[4,36], [5, 79], [6,148],[7,249]]
 coords = []
@@ -21,7 +23,11 @@ class BuilderPoint:
     Class for GUI management
     """
 
-    def __init__(self, graph, fig, ax, btn_vander, btn_lagrange, btn_newton_matrix, btn_newton_ddn, btn_spline):
+    def __init__(self, graph, fig, ax, btn_vander, btn_lagrange, btn_newton_matrix, btn_newton_ddn, btn_spline, spline):
+        """
+        Init the class
+        """
+        self.release = None
         self.graph = graph
         self.fig = fig
         self.ax = ax
@@ -31,10 +37,19 @@ class BuilderPoint:
         self.btn_newton_ddn = btn_newton_ddn
         self.btn_spline = btn_spline
         self.cid = None
+        self.motion = None
         self.continuePlotting = False
+        self.dragging_point = None
+        self.spline = spline
+        self.line = None
 
     def connect(self):
+        """
+        Connect the button and mouse event
+        """
         self.cid = self.fig.canvas.mpl_connect('button_press_event', self.onclick)
+        self.motion = self.fig.canvas.mpl_connect('motion_notify_event', self.on_motion)
+        self.release = self.fig.canvas.mpl_connect('button_release_event', self.on_release)
         self.continuePlotting = True
         self.btn_vander.pack_forget()
         self.btn_lagrange.pack_forget()
@@ -43,7 +58,13 @@ class BuilderPoint:
         self.btn_spline.pack_forget()
 
     def disconnect(self):
+        """
+        Disconnect the button and mouse event
+        :return:
+        """
         self.fig.canvas.mpl_disconnect(self.cid)
+        self.fig.canvas.mpl_disconnect(self.motion)
+        self.fig.canvas.mpl_disconnect(self.release)
         self.continuePlotting = False
         if coords:
             self.btn_vander.pack()
@@ -52,20 +73,89 @@ class BuilderPoint:
             self.btn_newton_ddn.pack()
             self.btn_spline.pack()
 
+    def drag_and_drop(self):
+        """
+        Connect the mouse event
+        """
+        self.cid = self.fig.canvas.mpl_connect('button_press_event', self.onclick)
+        self.motion = self.fig.canvas.mpl_connect('motion_notify_event', self.on_motion)
+        self.release = self.fig.canvas.mpl_connect('button_release_event', self.on_release)
+
     def change_state(self):
-        if self.continuePlotting:
+        """
+        If spline is active, enable picking
+        If plotting is active, disable it
+        else, enable Plotting
+        """
+        if self.spline.upd:
+            self.drag_and_drop()
+        elif self.continuePlotting:
             self.disconnect()
         else:
             self.connect()
 
     def onclick(self, event):
+        """ callback method for mouse click event
+        :type event: MouseEvent
+        """
         x, y = event.xdata, event.ydata
-        x = round(x)
-        y = round(y)
-        coords.append([x, y])
+        if self.spline.upd:
+            self.dragging_point = self.find_neighbor_point(event)
+        else:
+            x = round(x)
+            y = round(y)
+            coords.append([x, y])
+        self.update_plot()
 
-        self.ax.scatter([x], [y], c='b', s=50)
+    def on_motion(self, event):
+        """ callback method for mouse motion event
+        :type event: MouseEvent
+        """
+        if not self.dragging_point:
+            return
+        if event.xdata is None or event.ydata is None:
+            return
+        coords[:] = [[round(event.xdata), round(event.ydata)] if e == self.dragging_point else e for e in coords]
+        self.dragging_point = [round(event.xdata), round(event.ydata)]
+        self.update_plot()
+
+    def on_release(self, event):
+        """ callback method for mouse release event
+        :type event: MouseEvent
+        """
+        if self.dragging_point:
+            self.dragging_point = None
+            self.update_plot()
+
+    def find_neighbor_point(self, event):
+        """ Find point around mouse position
+        :rtype: ((int, int)|None)
+        :return: (x, y) if there are any point around mouse else None
+        """
+        distance_threshold = 1.5
+        nearest_point = None
+        min_distance = math.sqrt(2 * (100 ** 2))
+        for x, y in coords:
+            distance = math.hypot(event.xdata - x, event.ydata - y)
+            if distance < min_distance:
+                min_distance = distance
+                nearest_point = [x, y]
+        if min_distance < distance_threshold:
+            return nearest_point
+        return None
+
+    def update_plot(self):
+        """
+        Update the current plot
+        """
+        # Update current plot
+        if not self.line:
+            self.line = self.ax.scatter(coords[0][0], coords[0][1], c='b', s=50)
+        else:
+            self.line.set_offsets(coords)
         self.graph.draw()
+        if self.spline.upd:
+            self.spline.show_matrix(True)
 
 
 class Vandermonde:
@@ -328,10 +418,13 @@ class Spline:
         self.spline = None
         self.coef = None
         self.show = False
+        self.upd = False
+        self.curve = None
 
     def matrix_x_and_y(self):
         """
         Divide the coords into two separate list of coords x and y
+        :rtype: [],[]
         :return: list of x and list of y
         """
 
@@ -352,22 +445,29 @@ class Spline:
         # Evaluate a B-spline
         self.coef = interpolate.splev(u, tck)
 
-    def show_matrix(self):
+    def show_matrix(self, drag=False):
         """
-        Manage the GUI of the vandermonde interpolation and calculate the coef with the vandermonde methods
-        :return: the interpolation
+        Manage the GUI of the Bspline interpolation
+        :return: the interpolation of a BSpline
         """
-        if not self.show:
+
+        if not self.show or drag:
             self.show = True
+            self.upd = True
             self.matrix_x_and_y()
             self.build_spline()
 
             # Print Poly
-            self.ax.plot(self.coef[0], self.coef[1], 'cyan')
+            if not self.curve:
+                self.curve, = self.ax.plot(self.coef[0], self.coef[1], 'cyan')
+            else:
+                self.curve.set_data(self.coef[0], self.coef[1])
             self.graph.draw()
 
         else:
             self.show = False
+            self.upd = False
+            self.curve = None
 
 
 def horner(x_matrix, coef, x):
@@ -455,11 +555,10 @@ def init():
     btn_spline = Button(root, text="Print spline cubique", command=spline.show_matrix, bg="cyan",
                         fg="white")
     builder_point = BuilderPoint(graph, fig, ax, btn_vander, btn_lagrange, btn_newton_matrix, btn_newton_ddn,
-                                 btn_spline)
+                                 btn_spline, spline)
 
     # Manage button for builder point
-
-    b = Button(root, text="Start/Stop", command=builder_point.change_state, bg="red", fg="white")
+    b = Button(root, text="Start/Stop or picking", command=builder_point.change_state, bg="red", fg="white")
     b.pack()
 
     root.mainloop()
