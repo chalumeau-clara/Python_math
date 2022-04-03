@@ -8,7 +8,7 @@ from scipy import interpolate
 
 # plt.style.use('ggplot')
 global coords
-# coords = [[1, 1], [2, 3], [4, -1], [6, 5], [7, 0]]
+#coords = [[1, 1], [2, 3], [4, -1], [6, 5], [7, 0]]
 # coords = [[0,4], [1,3], [2,4], [3,13],[4,36], [5, 79], [6,148],[7,249]]
 coords = []
 X_min = 0
@@ -316,7 +316,7 @@ class Newton:
 
     def build_newton_matrix(self):
         """
-        Construct the Vandermonde matrix
+        Construct the Newton matrix
         :return: matrix
         """
         self.newton_matrix = np.zeros((len(self.matrix_of_x), len(self.matrix_of_x)), dtype=int)
