@@ -2,15 +2,12 @@ import math
 from tkinter import *
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
-import matplotlib.pyplot as plt
 import numpy as np
 from scipy import interpolate
 
 # plt.style.use('ggplot')
 global coords
-# coords = [[1, 1], [2, 8], [3, 27], [4, 64]] #for ex 5
-#coords = [[1, 1], [2, 3], [4, -1], [6, 5], [7, 0]] #for ex 6
-# coords = [[0,4], [1,3], [2,4], [3,13],[4,36], [5, 79], [6,148],[7,249]]
+
 coords = []
 X_min = 0
 X_max = 40
