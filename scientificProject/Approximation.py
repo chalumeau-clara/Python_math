@@ -12,14 +12,15 @@ global ycoords
 
 xcoords = []
 ycoords = []
-
+xcoords = [0, 1, 2, 3, 4, 6, 7, 9, 11, 12, 15, 16, 17, 18, 20]
+ycoords = [2, 1, 0, -1, -3, -1, 0, 2, 4, 5, 7, 10, 8, -3, -10]
 
 class Approximation:
 
     def __init__(self, ax, graph):
-        self.nb_point = 0
+        self.nb_point = 15
         self.epsilon = 0
-        self.degree = 0
+        self.degree = 1
         self.sum_xi = []
         self.sum_xc = []
         self.matrix = []
@@ -30,12 +31,12 @@ class Approximation:
 
     def init_point(self, ax):
         # User input
-        self.nb_point = 40 #int(input("Please, enter the number of points:\n"))
+        self.nb_point = 15 #int(input("Please, enter the number of points:\n"))
         self.epsilon = 2 #float(input("Enter the incertitude:\n"))
         self.min_x = 0 #int(input("Enter the min axis for x:\n"))
-        self.max_x = 50 #int(input("Enter the max axis for x:\n"))
-        min_y = 0 #int(input("Enter the min axis for y:\n"))
-        max_y = 50 #int(input("Enter the max axis for y:\n"))
+        self.max_x = 22 #int(input("Enter the max axis for x:\n"))
+        min_y = -12 #int(input("Enter the min axis for y:\n"))
+        max_y = 12 #int(input("Enter the max axis for y:\n"))
 
         # Set axis
         ax.set_xlim(self.min_x - 3, self.max_x + 3)
@@ -55,11 +56,26 @@ class Approximation:
         print("Coordonnates of x ", xcoords)
         print("Coordonnates of y ", ycoords)
 
+    def init_ex(self, ax):
+        # User input
+        self.nb_point = 15  # int(input("Please, enter the number of points:\n"))
+        self.epsilon = 2  # float(input("Enter the incertitude:\n"))
+        self.min_x = 0  # int(input("Enter the min axis for x:\n"))
+        self.max_x = 52  # int(input("Enter the max axis for x:\n"))
+        min_y = -62  # int(input("Enter the min axis for y:\n"))
+        max_y = 12  # int(input("Enter the max axis for y:\n"))
+
+        # Set axis
+        ax.set_xlim(self.min_x - 3, self.max_x + 3)
+        ax.set_ylim(min_y - 3, max_y + 3)
+
     def get_degree(self):
         print("Le degree d'un polynome est égal au nombre de variation")
-        self.degree = 0
+        print("Coordonnates of x ", xcoords)
+        print("Coordonnates of y ", ycoords)
         for i in range(self.nb_point - 2):
-            if ycoords[i] < ycoords[i + 1] and ycoords[i + 1] > ycoords[i + 2]:
+            if ycoords[i] < ycoords[i + 1] and ycoords[i + 1] > ycoords[i + 2] \
+                    or ycoords[i] > ycoords[i + 1] and ycoords[i + 1] < ycoords[i + 2]:
                 self.degree += 1
         print(self.degree)
 
@@ -100,10 +116,41 @@ class Approximation:
         A = np.array(self.matrix)
         B = np.array(self.sum_xc)
         X = np.linalg.solve(A, B)
+        print(X)
+
+        x = 22
+        y = 25
+        z = 50
+
+        rx = np.polyval(X, x)
+        ry = np.polyval(X, y)
+        rz = np.polyval(X, z)
+        print("P(22) = ", rx, " P(25) = ", ry, "P(50) = ", rz)
 
         x = np.linspace(self.min_x, self.max_x, 100)
         self.ax.plot(x, np.polyval(X, x), linewidth=2.0, c="green")
         self.graph.draw()
+
+    def show_matrix_ex(self):
+        self.get_degree()
+        self.sum_power_of_x()
+        self.sum_of_power_xc()
+        self.build_matrix()
+        print(self.matrix)
+        print(self.sum_xc)
+        A = np.array(self.matrix)
+        B = np.array(self.sum_xc)
+        X = np.linalg.solve(A, B)
+        print(X)
+
+        x = 22
+        y = 25
+        z = 50
+
+        rx = np.polyval(X, x)
+        ry = np.polyval(X, y)
+        rz = np.polyval(X, z)
+        print("P(22) = ", rx, " P(25) = ", ry, "P(50) = ", rz)
 
 
 def init():
@@ -129,13 +176,15 @@ def init():
     # Add a plot
     ax = fig.add_subplot(111)
     app = Approximation(ax, graph)
-    app.init_point(ax)
+    app.init_ex(ax)
     ax.set_xlabel("X axis")
     ax.set_ylabel("Y axis")
     ax.grid()
 
 
     ax.plot(xcoords, ycoords, '.')
+    print("Coordonnates of x ", xcoords)
+    print("Coordonnates of y ", ycoords)
     graph.draw()
 
     app.show_matrix()

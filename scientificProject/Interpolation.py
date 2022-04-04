@@ -8,7 +8,8 @@ from scipy import interpolate
 
 # plt.style.use('ggplot')
 global coords
-#coords = [[1, 1], [2, 3], [4, -1], [6, 5], [7, 0]]
+# coords = [[1, 1], [2, 8], [3, 27], [4, 64]] #for ex 5
+#coords = [[1, 1], [2, 3], [4, -1], [6, 5], [7, 0]] #for ex 6
 # coords = [[0,4], [1,3], [2,4], [3,13],[4,36], [5, 79], [6,148],[7,249]]
 coords = []
 X_min = 0
@@ -156,6 +157,23 @@ class BuilderPoint:
         if self.spline.upd:
             self.spline.show_matrix(True)
 
+    def ex_5(self):
+        global coords
+        coords = [[1, 1], [2, 8], [3, 27], [4, 64]]
+        self.update_plot()
+        self.update_plot()
+
+    def ex_6(self):
+        global coords
+        coords = [[0, 4], [1, 3], [2, 4], [3, 13], [4, 36], [5, 79], [6, 148], [7, 249]]
+        self.update_plot()
+        self.update_plot()
+
+    def clear(self):
+        global coords
+        coords = []
+
+
 
 class Vandermonde:
     """
@@ -173,6 +191,7 @@ class Vandermonde:
         self.inverse_vander = None
         self.show = False
         self.label = None
+        self.line = None
 
     def matrix_x_and_y(self):
         """
@@ -226,12 +245,14 @@ class Vandermonde:
             y = np.array([np.sum(np.array([self.coef[i] * (j ** i) for i in range(len(self.coef))])) for j in x])
 
             # Print Poly
-            self.ax.plot(x, y, linewidth=2.0, c="blue")
+            self.line = self.ax.plot(x, y, linewidth=2.0, c="blue")
             self.graph.draw()
 
         else:
             self.show = False
             self.label.pack_forget()
+            lines = self.line.pop(0)
+            lines.remove()
 
 
 class Lagrange:
@@ -247,6 +268,8 @@ class Lagrange:
         self.matrix_of_y = None
         self.coef = 0
         self.show = False
+        self.line = None
+        self.label = None
 
     def matrix_x_and_y(self):
         """
@@ -284,12 +307,21 @@ class Lagrange:
             self.matrix_x_and_y()
             self.Lagrange_n_k()
 
+            # Print result in the label
+            self.label = LabelFrame(self.root, text="Lagrange matrix")
+            self.label.pack(fill="both", expand="yes")
+            Label(self.label, text="Coef :\n").pack()
+            Label(self.label, text=self.coef).pack(fill=BOTH)
+
             # Print Poly
             x = np.linspace(X_min, X_max, 100)
-            self.ax.plot(x, np.polyval(self.coef, x), linewidth=2.0, c="green")
+            self.line = self.ax.plot(x, np.polyval(self.coef, x), linewidth=2.0, c="green")
             self.graph.draw()
         else:
             self.show = False
+            self.label.pack_forget()
+            lines = self.line.pop(0)
+            lines.remove()
 
 
 class Newton:
@@ -305,6 +337,8 @@ class Newton:
         self.show_div = False
         self.newton_matrix = None
         self.newton_matrix_div = []
+        self.line = None
+        self.label = None
 
     def matrix_x_and_y(self):
         """
@@ -345,20 +379,18 @@ class Newton:
             print("Nombre trop grand", err)
 
     def diff_div(self):
-        print(self.matrix_of_y)
+        """
+        Compute the diff division from Newton methods
+        :return: matrix of coef
+        """
+        self.newton_matrix_div = []
         for i in range(len(self.matrix_of_y)):
             self.newton_matrix_div.append(self.matrix_of_y[i])
 
         for i in range(len(self.matrix_of_x)):
             for j in range(len(self.matrix_of_x) - 1, i, -1):
-                print("i", i)
-                print(self.newton_matrix_div[j] - self.newton_matrix_div[j - 1])
-                print(self.matrix_of_x[j] - self.matrix_of_x[j - i - 1])
                 self.newton_matrix_div[j] = (self.newton_matrix_div[j] - self.newton_matrix_div[j - 1]) / (
                         self.matrix_of_x[j] - self.matrix_of_x[j - i - 1])
-                print("after result")
-                print(self.newton_matrix_div[j])
-        print(self.newton_matrix_div)
 
     def show_matrix(self):
         if not self.show:
@@ -375,12 +407,22 @@ class Newton:
             for i in x:
                 y.append(horner(self.matrix_of_x, self.coef, i))
 
+            # Print result in the label
+            self.label = LabelFrame(self.root, text="Newton matrix")
+            self.label.pack(fill="both", expand="yes")
+            Label(self.label, text=self.newton_matrix).pack(fill=BOTH)
+            Label(self.label, text="Coef :\n").pack()
+            Label(self.label, text=self.coef).pack(fill=BOTH)
+
             # Print Poly
-            self.ax.plot(x, y, linewidth=2.0, c="purple")
+            self.line = self.ax.plot(x, y, linewidth=2.0, c="purple")
             self.graph.draw()
 
         else:
             self.show = False
+            self.label.pack_forget()
+            lines = self.line.pop(0)
+            lines.remove()
 
     def show_matrix_ddn(self):
         if not self.show_div:
@@ -395,12 +437,21 @@ class Newton:
             for i in x:
                 y.append(horner(self.matrix_of_x, self.newton_matrix_div, i))
 
+            # Print result in the label
+            self.label = LabelFrame(self.root, text="Newton matrix")
+            self.label.pack(fill="both", expand="yes")
+            Label(self.label, text="DDV :\n").pack()
+            Label(self.label, text=self.newton_matrix_div).pack(fill=BOTH)
+
             # Print Poly
-            self.ax.plot(x, y, linewidth=2.0, c="magenta")
+            self.line = self.ax.plot(x, y, linewidth=2.0, c="magenta")
             self.graph.draw()
 
         else:
             self.show_div = False
+            self.label.pack_forget()
+            lines = self.line.pop(0)
+            lines.remove()
 
 
 class Spline:
@@ -559,6 +610,17 @@ def init():
     # Manage button for builder point
     b = Button(root, text="Start/Stop or picking", command=builder_point.change_state, bg="red", fg="white")
     b.pack()
+
+    # Clear button
+    clear = Button(root, text="Clear point", command=builder_point.clear, bg="olivedrab", fg="white")
+    clear.pack(side=RIGHT)
+
+    #Ex button
+    ex_5 = Button(root, text="Point ex5", command=builder_point.ex_5, bg="cadetblue", fg="white")
+    ex_5.pack(side=RIGHT)
+
+    ex_6 = Button(root, text="Point ex 6", command=builder_point.ex_6, bg="darkorchid", fg="white")
+    ex_6.pack(side=RIGHT)
 
     root.mainloop()
 
