@@ -1,15 +1,8 @@
-import math
-from tkinter import Tk, Label
-
 import numpy as np
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-import random
 import numpy.linalg
 from scipy.misc import derivative
-from scipy.stats import expon
-import sympy as sp
+
 
 
 def function(x):

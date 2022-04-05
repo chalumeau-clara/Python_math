@@ -17,9 +17,10 @@ function = "sin"
 
 global results
 results = {'rectangle_inferieur': 0,
-          'rectangle_superieur': 0,
-          'trapeze': 0,
-          'simpson': 0}
+           'rectangle_superieur': 0,
+           'trapeze': 0,
+           'simpson': 0}
+
 
 def apply_function(func_name, x_coords):
     """
@@ -89,13 +90,13 @@ class NumericalIntegration:
                                                                                      None)
 
         results['simpson'] = numerical_integration.simpson("sin", integration_input[0],
-                                                                                     integration_input[1],
-                                                                                     integration_input[2])
+                                                           integration_input[1],
+                                                           integration_input[2])
 
         results['trapeze'] = numerical_integration.rectangles_trapeze("sin", integration_input[0],
-                                                                                     integration_input[1],
-                                                                                     integration_input[2],
-                                                                                     None)
+                                                                      integration_input[1],
+                                                                      integration_input[2],
+                                                                      None)
 
         self.display_results()
 
@@ -120,20 +121,19 @@ class NumericalIntegration:
                                                                                      integration_input[2],
                                                                                      None)
         results['trapeze'] = numerical_integration.rectangles_trapeze("1/sin", integration_input[0],
-                                                                                     integration_input[1],
-                                                                                     integration_input[2],
-                                                                                     None)
+                                                                      integration_input[1],
+                                                                      integration_input[2],
+                                                                      None)
 
         results['simpson'] = numerical_integration.simpson("1/sin", integration_input[0],
-                                                                                     integration_input[1],
-                                                                                     integration_input[2])
-                                                                                     # Readjust plot axis
+                                                           integration_input[1],
+                                                           integration_input[2])
+        # Readjust plot axis
         # self.ax.autoscale()
 
         # self.ax.plot(x, y, c="blue")
         # self.graph.draw()
         self.display_results()
-
 
     def rectangles_inferieurs(self, func_name, a, b, n, y_coords):
         # Clear axes
@@ -186,7 +186,7 @@ class NumericalIntegration:
 
         return ((h / 2) * (y_coords[0] + y_coords[n] + (2 * sum(mapping)))) \
             if y_coords else ((h / 2) * (apply_function(func_name, [a])[0] + apply_function(func_name, [b])[0] + (
-                                      2 * sum(mapping))))
+                2 * sum(mapping))))
 
     def simpson_with_mapping(self, a, b, n, y_coords):
         # Clear axes
@@ -242,26 +242,27 @@ class NumericalIntegration:
     def display_results(self):
         props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
         textstr = "\nRec inférieur: " + str(results['rectangle_inferieur']) + \
-        "\nRec supérieur: " + str(results['rectangle_superieur']) + \
-        "\nTrapeze: ", str(results['trapeze']) + "\nSimpson: " + str(results['simpson'])
+                  "\nRec supérieur: " + str(results['rectangle_superieur']) + \
+                  "\nTrapeze: ", str(results['trapeze']) + "\nSimpson: " + str(results['simpson'])
 
         textstr2 = '\n'.join((
-        r'Rectangle inférieur: ', str(results['rectangle_inferieur']),
-        r'Rectangle supérieur: ', str(results['rectangle_superieur']),
-        r'Trapeze: ', str(results['trapeze']),
-        r'Simpson: ', str(results['simpson'])))
+            r'Rectangle inférieur: ', str(results['rectangle_inferieur']),
+            r'Rectangle supérieur: ', str(results['rectangle_superieur']),
+            r'Trapeze: ', str(results['trapeze']),
+            r'Simpson: ', str(results['simpson'])))
 
         print("\nRec inférieur: " + str(results['rectangle_inferieur']) + \
-        "\nRec supérieur: " + str(results['rectangle_superieur']) + \
-        "\nTrapeze: ", str(results['trapeze']) + "\nSimpson: " + str(results['simpson']))
+              "\nRec supérieur: " + str(results['rectangle_superieur']) + \
+              "\nTrapeze: ", str(results['trapeze']) + "\nSimpson: " + str(results['simpson']))
 
         props = dict(boxstyle='round', facecolor='wheat', alpha=0.5)
 
         # place a text box in upper left in axes coords
         self.ax.text(0.05, 0.95, textstr2, transform=self.ax.transAxes, fontsize=14,
-                verticalalignment='top', bbox=props)
+                     verticalalignment='top', bbox=props)
 
         plt.show()
+
 
 def setup_interface(root):
     """
@@ -339,6 +340,7 @@ def reset_results():
     results['rectangle_superieur'] = 0
     results['trapeze'] = 0
     results['simpson'] = 0
+
 
 def exercise9():
     reset_results()
