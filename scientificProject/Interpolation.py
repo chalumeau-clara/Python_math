@@ -126,7 +126,7 @@ class BuilderPoint:
 
     def find_neighbor_point(self, event):
         """ Find point around mouse position
-        :rtype: ((int, int)|None)
+        :rtype: ([int, int]|None)
         :return: (x, y) if there are any point around mouse else None
         """
         distance_threshold = 1.5
@@ -169,7 +169,6 @@ class BuilderPoint:
     def clear(self):
         global coords
         coords = []
-
 
 
 class Vandermonde:
@@ -618,7 +617,7 @@ def init():
     clear = Button(root, text="Clear point", command=builder_point.clear, bg="olivedrab", fg="white")
     clear.pack(side=RIGHT)
 
-    #Ex button
+    # Ex button
     ex_5 = Button(root, text="Point ex5", command=builder_point.ex_5, bg="cadetblue", fg="white")
     ex_5.pack(side=RIGHT)
 

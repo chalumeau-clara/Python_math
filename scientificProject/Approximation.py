@@ -280,4 +280,8 @@ def init():
 
 
 if __name__ == '__main__':
-    init()
+    while 1:
+        init()
+        restart = input("\n\nRestart Approximation yes/no ?")
+        if restart == "no":
+            break
