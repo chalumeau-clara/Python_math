@@ -18,6 +18,7 @@ def function(x):
     # 1 - x * x
     # x*x*x - 2*x + 3
     # x - np.exp(-x)
+    # np.power(x,1/3)
 
 
 def print_function(a, b):
@@ -25,6 +26,7 @@ def print_function(a, b):
     plt.plot(list_x, function(list_x), "k-")
     plt.xlabel("x")
     plt.ylabel("y")
+    plt.grid()
     plt.show()
 
 
@@ -84,15 +86,18 @@ def lagrange_method(f, a, b):
     else:
         pivot = b
         x0 = a
-    count, xn = 10, x0
+    count, count_lines, xn = 10, 0, x0
     while count > 0:
         x0 = xn
         xn = x0 - f(x0) * (x0 - pivot) / (f(x0) - f(pivot))
-        plt.plot(xn, 0, linestyle='none', marker='o', c='lime',
-                    markersize=5)
+        if count_lines < 3:
+            plt.plot([pivot,x0], [f(pivot), f(x0)], linestyle='-', c='lime',
+                    linewidth=1)
+            count_lines += 1
         count -= 1
     plt.xlabel("x")
     plt.ylabel("y")
+    plt.grid()
     plt.show()
     return xn
 
@@ -105,15 +110,18 @@ def newton_method(f, a, b):
         x0 = a
     else:
         x0 = b
-    count, xn = 10, x0
+    count, count_lines, xn = 10, 0, x0
     while count > 0:
         x0 = xn
         xn = x0 - f(x0) / derivative(f, x0)
-        plt.plot(xn, 0, linestyle='none', marker='o', c='lime',
-                 markersize=5)
+        if count_lines < 3:
+            plt.plot([x0, xn], [f(x0), 0], linestyle='-', c='lime',
+                 linewidth=1)
+            count_lines += 1
         count -= 1
     plt.xlabel("x")
     plt.ylabel("y")
+    plt.grid()
     plt.show()
     return xn
 
@@ -125,6 +133,21 @@ def is_passing_0(f, a, b):
 def decoupage(f, a, b):
     final_a = a
     final_b = b
+    while not is_passing_0(f, final_a, final_b) and (final_a < b and final_b > a):
+        final_b -= 0.5
+    if final_b <= final_a:
+        final_a = a
+        final_b = b
+    while not is_passing_0(f, final_a, final_b) and (final_a < b and final_b > a):
+        final_a += 0.5
+    if final_a >= final_b:
+        final_a = a
+        final_b = b
+    while not is_passing_0(f, final_a, final_b) and (final_a < b and final_b > a):
+        final_a += 0.5
+        final_b -= 0.5
+    if final_a >= b:
+        return False
     while is_passing_0(f, final_a, final_b) and (final_a < b and final_b > a):
         var = variation(f, final_a, final_b)
         if var == True or var == False:
@@ -153,13 +176,18 @@ def decoupage(f, a, b):
         final_b += 0.5
 
 if __name__ == '__main__':
-    a, b = -5, 5
+    a, b = -2, 2
     print_function(a, b)
     var = variation(function, a, b)
     if var != True and var != False:
         print("La fonction n'est pas monotone sur l'intervalle ["+str(a)
               +","+str(b)+']')
-        a, b = decoupage(function,a,b)
+        if decoupage(function, a, b) != False:
+            a, b = decoupage(function,a,b)
+        else:
+            print("Cette fonction ne passe par 0 sur ["+str(a)
+              +","+str(b)+']')
+            exit()
     conv = convexe_or_concave(function, a, b)
     if conv != True and conv != False:
         print("La fonction n'est pas strictement convexe ou "
