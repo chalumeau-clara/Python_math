@@ -13,7 +13,9 @@ import sympy as sp
 
 
 def function(x):
-    return x * x * x + x - 1 # expon.ppf(-x)
+    return x * x * x + x - 1
+    # 1 - x * x
+    # x*x*x - 2*x + 3
 
 
 def print_function(a, b):
@@ -119,11 +121,11 @@ if __name__ == '__main__':
     print_function(a, b)
     var = variation(function, a, b)
     if var != True and var != False:
-        print("La fonction n'est pas monotone sur cet interval")
+        print("La fonction n'est pas monotone sur cet intervalle")
         exit()
     conv = convexe_or_concave(function, a, b)
     if conv != True and conv != False:
-        print("La fonctione n'est pas strictement convexe ou concave sur cet interval")
+        print("La fonction n'est pas strictement convexe ou concave sur cet intervalle")
         exit()
     print("Methode par Lagrange, x = " + str(lagrange_method(function, a, b)))
     print("Methode par Newton, x = " + str(newton_method(function, a, b)))
