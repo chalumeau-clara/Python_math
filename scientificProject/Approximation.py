@@ -202,8 +202,7 @@ class Approximation:
         self.sum_power_of_x()
         self.sum_of_power_xc()
         self.build_matrix()
-        #print(self.matrix)
-        #print(self.sum_xc)
+
         A = np.array(self.matrix)
         B = np.array(self.sum_xc)
         X = np.linalg.solve(A, B)

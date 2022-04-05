@@ -484,12 +484,18 @@ class Spline:
         """
         # Interpolate Spline parameter : Find the B-spline representation of an N-D curve.
         # Modify k to change the degree
+        # return parameters :
+        # t : vectors of knots
+        # c : the B Spline coef
+        # k : the degree of the spline
+        # u : an array of the value of the parameters
         tck, u = interpolate.splprep([self.matrix_of_x, self.matrix_of_y], k=3, s=0)
 
         # Get more precision
         u = np.linspace(0, 1, num=100, endpoint=True)
 
         # Evaluate a B-spline
+        # return an array of values representing the spline function
         self.coef = interpolate.splev(u, tck)
 
     def show_matrix(self, drag=False):
