@@ -14,8 +14,10 @@ import sympy as sp
 
 def function(x):
     return x * x * x + x - 1
+    # x * x * x + x - 1
     # 1 - x * x
     # x*x*x - 2*x + 3
+    # x - np.exp(-x)
 
 
 def print_function(a, b):
@@ -151,7 +153,7 @@ def decoupage(f, a, b):
         final_b += 0.5
 
 if __name__ == '__main__':
-    a, b = -1, 2
+    a, b = -5, 5
     print_function(a, b)
     var = variation(function, a, b)
     if var != True and var != False:
