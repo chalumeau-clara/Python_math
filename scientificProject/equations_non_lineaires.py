@@ -115,17 +115,54 @@ def newton_method(f, a, b):
     plt.show()
     return xn
 
+def is_passing_0(f, a, b):
+    if f(a) * f(b) < 0:
+        return True
+    return False
+
+def decoupage(f, a, b):
+    final_a = a
+    final_b = b
+    while is_passing_0(f, final_a, final_b) and (final_a < b and final_b > a):
+        var = variation(f, final_a, final_b)
+        if var == True or var == False:
+            conv = convexe_or_concave(f, final_a, final_b)
+            if conv == True or conv == False:
+                return (final_a, final_b)
+        final_b -= 0.5
+    final_a = a
+    final_b = b
+    while is_passing_0(f, final_a, final_b) and (final_a < b and final_b > a):
+        var = variation(f, final_a, final_b)
+        if var == True or var == False:
+            conv = convexe_or_concave(f, final_a, final_b)
+            if conv == True or conv == False:
+                return (final_a, final_b)
+        final_a += 0.5
+    final_a = a
+    final_b = b
+    while is_passing_0(f, final_a, final_b) and (final_a < b and final_b > a):
+        var = variation(f, final_a, final_b)
+        if var == True or var == False:
+            conv = convexe_or_concave(f, final_a, final_b)
+            if conv == True or conv == False:
+                return (final_a, final_b)
+        final_a += 0.5
+        final_b += 0.5
 
 if __name__ == '__main__':
-    a, b = 0, 2
+    a, b = -1, 2
     print_function(a, b)
     var = variation(function, a, b)
     if var != True and var != False:
-        print("La fonction n'est pas monotone sur cet intervalle")
-        exit()
+        print("La fonction n'est pas monotone sur l'intervalle ["+str(a)
+              +","+str(b)+']')
+        a, b = decoupage(function,a,b)
     conv = convexe_or_concave(function, a, b)
     if conv != True and conv != False:
-        print("La fonction n'est pas strictement convexe ou concave sur cet intervalle")
-        exit()
+        print("La fonction n'est pas strictement convexe ou "
+              "concave sur l'interalle ["+str(a)
+              +","+str(b)+']')
+        a, b = decoupage(function, a, b)
     print("Methode par Lagrange, x = " + str(lagrange_method(function, a, b)))
     print("Methode par Newton, x = " + str(newton_method(function, a, b)))
